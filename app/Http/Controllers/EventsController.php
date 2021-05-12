@@ -9,7 +9,8 @@ use Illuminate\Foundation\Bus\DispatchesJobs;
 use Illuminate\Foundation\Validation\ValidatesRequests;
 use Illuminate\Routing\Controller as BaseController;
 use Illuminate\Support\Facades\Date;
-use DB;
+use Illuminate\Support\Facades\DB;
+
 
 class EventsController extends BaseController
 {
@@ -101,17 +102,8 @@ class EventsController extends BaseController
     public function getEventsWithWorkshops() {
         //throw new \Exception('implement in coding task 1');
 
-        $events = DB::table('events')
-            ->get();
-
-        foreach($events as $key=>$event){
-            $eventworkshop = DB::table('workshops')
-            ->where('workshops.event_id', $event->id)                
-            ->get();
-            $events[$key]->workshops = $eventworkshop;
-        }
-
-        return json_encode($events);
+        $events = Event::with('workshops')->get();       
+        return $events;
 
     }
 
@@ -191,6 +183,17 @@ class EventsController extends BaseController
      */
 
     public function getFutureEventsWithWorkshops() {
-        throw new \Exception('implement in coding task 2');
+        //throw new \Exception('implement in coding task 2');
+        $currentdate = date('Y-m-d');
+
+        $events = Event::with('workshops')
+        ->select('events.id','events.name as ename','events.created_at','events.updated_at','workshops.id as wid')
+        ->leftJoin('workshops', 'workshops.event_id', '=', 'events.id')
+        ->where('workshops.start', '>' , $currentdate)
+        ->groupBy('events.id')
+        ->get();    
+
+        return $events;
+        
     }
 }
